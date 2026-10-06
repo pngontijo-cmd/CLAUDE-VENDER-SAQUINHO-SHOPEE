@@ -48,10 +48,9 @@ PAGINAS_POR_BUSCA = 3
 # {loja} é trocado pelo nome da loja.
 MENSAGEM = (
     "Olá, {loja}! Tudo bem? 😊\n"
-    "Somos fabricantes de saquinho preto para embalagem de e-commerce "
+    "Somos representantes de saquinho preto para embalagem de e-commerce "
     "(envelope de segurança com lacre), ideal para envios da Shopee.\n"
-    "Vi que vocês também são de Nova Serrana, então conseguimos entregar "
-    "rápido e com preço de fábrica.\n"
+    "Vi que vocês também são de Nova Serrana, assim como nós.\n"
     "Segue a nossa tabela de valores para vocês analisarem. "
     "Qualquer dúvida é só chamar aqui! 🙌"
 )
@@ -59,10 +58,9 @@ MENSAGEM = (
 # Mensagem para lojas "prováveis" (de MG, mas sem mencionar Nova Serrana).
 MENSAGEM_PROVAVEL = (
     "Olá, {loja}! Tudo bem? 😊\n"
-    "Somos fabricantes de saquinho preto para embalagem de e-commerce "
+    "Somos representantes de saquinho preto para embalagem de e-commerce "
     "(envelope de segurança com lacre), ideal para envios da Shopee.\n"
-    "Ficamos em Nova Serrana-MG e entregamos rápido em toda a região, "
-    "com preço de fábrica.\n"
+    "Estamos aqui em Nova Serrana-MG.\n"
     "Segue a nossa tabela de valores para vocês analisarem. "
     "Qualquer dúvida é só chamar aqui! 🙌"
 )
