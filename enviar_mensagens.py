@@ -34,9 +34,12 @@ BOTOES_CHAT = [
     "text=Conversar agora",
 ]
 CAIXA_TEXTO = ".shopee-chat-root textarea, textarea[placeholder*='mensagem' i]"
+# Depois de anexar, a Shopee deixa a imagem selecionada esperando o envio.
 BOTOES_CONFIRMAR_ANEXO = [
     ".shopee-chat-root button:has-text('Enviar')",
+    ".shopee-chat-root [role=button]:has-text('Enviar')",
     ".shopee-chat-root button:has-text('Send')",
+    ".shopee-chat-root [class*='send' i]",
 ]
 
 
@@ -94,9 +97,17 @@ def enviar_para_loja(pagina: Page, loja: dict, tabela: Path):
     if entrada.count() == 0:
         entrada = pagina.locator("input[type=file][accept*='image']").first
     entrada.set_input_files(str(tabela))
-    time.sleep(random.uniform(2, 4))
-    clicar_primeiro(pagina, BOTOES_CONFIRMAR_ANEXO, timeout=2500)  # se pedir confirmação
     time.sleep(random.uniform(3, 5))
+    # Envia a imagem selecionada: clica no botão de enviar e, por garantia,
+    # aperta Enter na caixa de texto (com a caixa vazia, o Enter não manda nada a mais).
+    clicar_primeiro(pagina, BOTOES_CONFIRMAR_ANEXO, timeout=2500)
+    time.sleep(random.uniform(1, 2))
+    try:
+        caixa.click(timeout=3000)
+        caixa.press("Enter")
+    except Exception:
+        pass
+    time.sleep(random.uniform(4, 6))
 
 
 def main():
