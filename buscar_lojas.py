@@ -17,7 +17,7 @@ from comum import (CAMPOS_LOJA, SHOPEE, abrir_navegador, agora, anexar_csv,
                    perfil_dos_args)
 from playwright.sync_api import sync_playwright
 
-CHAVES_LOCAL = ("shop_location", "location", "place", "city", "cidade", "address")
+CHAVES_LOCAL = ("shop_location", "location", "place", "city", "cidade", "address", "state")
 ESTADOS = {normalizar(e) for e in [
     "Acre", "Alagoas", "Amapa", "Amazonas", "Bahia", "Ceara", "Distrito Federal",
     "Espirito Santo", "Goias", "Maranhao", "Mato Grosso", "Mato Grosso do Sul",
@@ -93,8 +93,11 @@ def produtos_da_busca(pagina, palavra: str, num_pagina: int) -> dict:
     return lojas
 
 
-def detalhes_da_loja(pagina, shopid: str) -> dict | None:
-    """Abre a página da loja e confirma se ela é da cidade alvo."""
+def detalhes_da_loja(pagina, shopid: str, local_busca: str = "") -> tuple[dict | None, str]:
+    """Abre a página da loja e confirma se ela é da cidade alvo.
+
+    Devolve (dados da loja ou None, localização lida).
+    """
     jsons = coletar_json(
         pagina, "/api/v4/shop/",
         lambda: pagina.goto(f"{SHOPEE}/shop/{shopid}", wait_until="domcontentloaded"),
@@ -119,19 +122,22 @@ def detalhes_da_loja(pagina, shopid: str) -> dict | None:
     except Exception:
         pass
 
-    if eh_cidade_alvo(local) or eh_cidade_alvo(nome) or eh_cidade_alvo(texto):
+    local = local or local_busca
+    if any(eh_cidade_alvo(t) for t in (local_busca, local, nome, texto)):
         return {
             "usuario": usuario,
             "nome": nome or usuario,
             "localizacao": local or config.CIDADE_ALVO,
             "url": f"{SHOPEE}/{usuario}" if usuario else f"{SHOPEE}/shop/{shopid}",
-        }
-    return None
+        }, local
+    return None, local
 
 
 def main():
     ja_salvas = {l["shopid"] for l in ler_csv(config.ARQUIVO_LOJAS)}
     ja_verificadas = set(ja_salvas)
+    if config.ARQUIVO_VERIFICADAS.exists():  # lojas já conferidas em outras execuções
+        ja_verificadas |= set(config.ARQUIVO_VERIFICADAS.read_text(encoding="utf-8").split())
     novas = 0
 
     with sync_playwright() as p:
@@ -142,6 +148,9 @@ def main():
             for n in range(config.PAGINAS_POR_BUSCA):
                 print(f"\n🔎 Buscando '{palavra}' (página {n + 1})...")
                 candidatas = produtos_da_busca(pagina, palavra, n)
+                if not candidatas:  # às vezes a página carrega vazia; tenta de novo
+                    pausa(5, 10)
+                    candidatas = produtos_da_busca(pagina, palavra, n)
                 print(f"   {len(candidatas)} lojas nos resultados")
                 if not candidatas:
                     break
@@ -150,14 +159,18 @@ def main():
                     if shopid in ja_verificadas:
                         continue
                     ja_verificadas.add(shopid)
+                    with config.ARQUIVO_VERIFICADAS.open("a", encoding="utf-8") as f:
+                        f.write(shopid + "\n")
                     local = normalizar(info["local"])
                     # Localização é de outra cidade (não é só o estado) -> pula.
                     if local and local not in ESTADOS and not eh_cidade_alvo(local):
+                        print(f"   · {info['nome'] or shopid}: {info['local']}")
                         continue
 
                     pausa()
-                    loja = detalhes_da_loja(pagina, shopid)
+                    loja, local_lido = detalhes_da_loja(pagina, shopid, info["local"])
                     if not loja:
+                        print(f"   · {info['nome'] or shopid}: {local_lido or 'cidade não encontrada'}")
                         continue
                     loja.update(shopid=shopid, palavra_busca=palavra, encontrada_em=agora())
                     anexar_csv(config.ARQUIVO_LOJAS, CAMPOS_LOJA, loja)

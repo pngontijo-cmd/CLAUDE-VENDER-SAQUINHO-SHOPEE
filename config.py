@@ -80,4 +80,5 @@ BASE = Path(__file__).resolve().parent
 PERFIL_NAVEGADOR = BASE / "perfil_navegador"  # guarda o login da Shopee
 ARQUIVO_LOJAS = BASE / "lojas_encontradas.csv"
 ARQUIVO_ENVIADOS = BASE / "mensagens_enviadas.csv"
+ARQUIVO_VERIFICADAS = BASE / "lojas_verificadas.txt"  # lojas já conferidas
 ARQUIVO_BLOQUEADOS = BASE / "nao_contatar.txt"  # 1 shopid ou usuário por linha
