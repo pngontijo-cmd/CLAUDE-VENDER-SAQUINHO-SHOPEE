@@ -76,8 +76,10 @@ LIMITE_POR_DIA = 15
 ESPERA_MIN = 90
 ESPERA_MAX = 240
 
-# Se True, pergunta "Enviar? (s/n)" antes de cada loja.
-CONFIRMAR_CADA_ENVIO = True
+# False = envia sozinho, sem perguntar nada (automático).
+# True  = pergunta "Enviar? (s/n)" antes de cada loja.
+# (Também dá para pedir confirmação só uma vez: python enviar_mensagens.py --revisar)
+CONFIRMAR_CADA_ENVIO = False
 
 # ---------------------------------------------------------------------------
 # NAVEGADOR

@@ -9,7 +9,8 @@ Passo 2: envia a mensagem + a tabela de preços para as lojas encontradas.
 - Lojas em nao_contatar.txt são ignoradas.
 
 Uso:
-    python enviar_mensagens.py            # pergunta antes de cada envio
+    python enviar_mensagens.py            # envia sozinho, sem perguntar
+    python enviar_mensagens.py --revisar  # pergunta antes de cada envio
     python enviar_mensagens.py --teste    # só mostra o que faria, não envia
     python enviar_mensagens.py --perfil loja2   # usa outro perfil/conta
 """
@@ -153,7 +154,7 @@ def main():
 
         for i, loja in enumerate(fila, 1):
             print(f"\n[{i}/{len(fila)}] {loja['nome']} ({loja.get('certeza') or 'confirmada'}) - {loja['url']}")
-            if config.CONFIRMAR_CADA_ENVIO:
+            if config.CONFIRMAR_CADA_ENVIO or "--revisar" in sys.argv:
                 r = input("   Enviar? (s = sim / n = pular / x = nunca contatar / q = sair): ").strip().lower()
                 if r == "q":
                     break

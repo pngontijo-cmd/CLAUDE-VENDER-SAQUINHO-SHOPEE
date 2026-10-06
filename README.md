@@ -38,9 +38,21 @@ python enviar_mensagens.py          # 3) envia de verdade
 
 Na primeira vez o navegador abre a Shopee: **faça login**, volte ao terminal e aperte ENTER. O login fica salvo na pasta `perfil_navegador/`.
 
-Durante o envio, o robô pergunta para cada loja:
-`s` envia · `n` pula · `x` nunca mais contatar essa loja · `q` sai.
-Para enviar sem perguntar, use `CONFIRMAR_CADA_ENVIO = False` no `config.py`.
+O envio é automático: ele manda para as lojas da lista, respeitando o limite diário, sem perguntar nada.
+Para revisar loja por loja, use `python enviar_mensagens.py --revisar`
+(`s` envia · `n` pula · `x` nunca mais contatar essa loja · `q` sai).
+
+## Rodar sozinho todo dia
+
+O arquivo **`rodar_robo.bat`** faz tudo em sequência: busca lojas novas e envia as mensagens do dia. Dá para dar dois cliques nele ou agendar no Windows:
+
+1. Aperte a tecla Windows, digite **Agendador de Tarefas** e abra.
+2. Clique em **Criar Tarefa Básica...**, dê o nome **Robô Shopee** e clique em Avançar.
+3. Escolha **Diariamente**, defina o horário (por exemplo, 09:00) e clique em Avançar.
+4. Escolha **Iniciar um programa**, clique em **Procurar...**, selecione o `rodar_robo.bat` e clique em Avançar.
+5. Clique em **Concluir**.
+
+O computador precisa estar ligado e com o Windows desbloqueado nesse horário. Se a Shopee pedir login ou captcha de novo, o robô fica esperando até alguém resolver na janela do navegador.
 
 ## Vários perfis / várias contas
 
