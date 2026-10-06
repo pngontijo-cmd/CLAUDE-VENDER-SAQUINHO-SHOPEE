@@ -8,8 +8,9 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 # Pasta no seu computador onde fica a tabela de preços dos saquinhos.
 # O robô pega o arquivo MAIS RECENTE dessa pasta.
-# Exemplo Windows: Path(r"C:\Users\Paulo\Documents\Tabela Saquinhos")
-PASTA_TABELA = Path(r"C:\Users\SEU_USUARIO\Documents\Tabela Saquinhos")
+# Padrão: pasta "Tabela Saquinhos" dentro de Documentos.
+# Para usar outra pasta: PASTA_TABELA = Path(r"C:\caminho\da\pasta")
+PASTA_TABELA = Path.home() / "Documents" / "Tabela Saquinhos"
 
 # O chat da Shopee só aceita IMAGEM (jpg/png). Se a sua tabela for PDF ou
 # Excel, salve/exporte uma versão em imagem dentro da mesma pasta.
@@ -64,6 +65,13 @@ ESPERA_MAX = 240
 
 # Se True, pergunta "Enviar? (s/n)" antes de cada loja.
 CONFIRMAR_CADA_ENVIO = True
+
+# ---------------------------------------------------------------------------
+# NAVEGADOR
+# ---------------------------------------------------------------------------
+# False = usa o navegador baixado na instalação (mais confiável).
+# True  = usa o Google Chrome instalado no computador.
+USAR_CHROME_INSTALADO = False
 
 # ---------------------------------------------------------------------------
 # ARQUIVOS INTERNOS (normalmente não precisa mexer)

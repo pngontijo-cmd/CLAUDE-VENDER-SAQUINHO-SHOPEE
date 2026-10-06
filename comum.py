@@ -46,17 +46,24 @@ def abrir_navegador(p: Playwright, perfil: str = "principal") -> BrowserContext:
         locale="pt-BR",
         viewport={"width": 1366, "height": 850},
         args=["--disable-blink-features=AutomationControlled"],
+        timeout=60000,
     )
-    try:
-        return p.chromium.launch_persistent_context(channel="chrome", **opcoes)
-    except Exception:
-        # Chrome não instalado: usa o Chromium do Playwright.
-        return p.chromium.launch_persistent_context(**opcoes)
+    print(f"🌐 Abrindo o navegador (perfil '{perfil}')...", flush=True)
+    if config.USAR_CHROME_INSTALADO:
+        try:
+            return p.chromium.launch_persistent_context(channel="chrome", **opcoes)
+        except Exception as e:
+            print(f"   Não deu para abrir o Chrome instalado ({str(e)[:80]}). Usando o navegador do robô.")
+    return p.chromium.launch_persistent_context(**opcoes)
 
 
 def garantir_login(contexto: BrowserContext):
     pagina = contexto.pages[0] if contexto.pages else contexto.new_page()
-    pagina.goto(SHOPEE, wait_until="domcontentloaded")
+    print("🛒 Abrindo a Shopee...", flush=True)
+    try:
+        pagina.goto(SHOPEE, wait_until="domcontentloaded", timeout=60000)
+    except Exception:
+        print("   A Shopee demorou para carregar; confira a janela do navegador.")
     if not any(c["name"] == "SPC_U" and c["value"] not in ("", "-") for c in contexto.cookies()):
         input(
             "\n>>> Faça login na Shopee na janela do navegador (só precisa na 1ª vez).\n"

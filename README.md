@@ -20,7 +20,7 @@ Ele usa o seu próprio Chrome, logado na **sua** conta da Shopee.
 
 Abra o arquivo **`config.py`** e ajuste:
 
-- `PASTA_TABELA`: a pasta onde fica a tabela de preços, por exemplo `Path(r"C:\Users\Paulo\Documents\Tabela Saquinhos")`.
+- `PASTA_TABELA`: a pasta onde fica a tabela de preços. O padrão é a pasta `Tabela Saquinhos` dentro de **Documentos**.
   ⚠️ O chat da Shopee **só aceita imagem**. Se a tabela estiver em Excel ou PDF, salve uma cópia em **JPG/PNG** nessa pasta.
 - `MENSAGEM`: o texto enviado (`{loja}` é trocado pelo nome da loja).
 - `PALAVRAS_BUSCA`: o que será pesquisado para achar as lojas.
