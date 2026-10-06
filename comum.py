@@ -11,7 +11,7 @@ import config
 
 SHOPEE = "https://shopee.com.br"
 
-CAMPOS_LOJA = ["shopid", "usuario", "nome", "localizacao", "url", "palavra_busca", "encontrada_em"]
+CAMPOS_LOJA = ["shopid", "usuario", "nome", "localizacao", "certeza", "url", "palavra_busca", "encontrada_em"]
 CAMPOS_ENVIO = ["shopid", "usuario", "nome", "perfil", "arquivo_tabela", "status", "enviado_em"]
 
 

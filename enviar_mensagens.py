@@ -77,7 +77,9 @@ def enviar_para_loja(pagina: Page, loja: dict, tabela: Path):
     time.sleep(random.uniform(1, 2))
 
     # 1) texto: digita linha a linha (Shift+Enter quebra linha sem enviar)
-    texto = config.MENSAGEM.format(loja=loja["nome"] or "tudo bem")
+    confirmada = loja.get("certeza", "confirmada") == "confirmada"
+    modelo = config.MENSAGEM if confirmada else config.MENSAGEM_PROVAVEL
+    texto = modelo.format(loja=loja["nome"] or "tudo bem")
     caixa.click()
     for i, linha in enumerate(texto.split("\n")):
         if i:
@@ -119,7 +121,9 @@ def main():
         if l["shopid"] not in ja_enviadas
         and normalizar(l["shopid"]) not in bloqueadas
         and normalizar(l["usuario"]) not in bloqueadas
+        and (not config.SOMENTE_CONFIRMADAS or l.get("certeza", "confirmada") == "confirmada")
     ]
+    fila.sort(key=lambda l: l.get("certeza") == "provavel")  # confirmadas primeiro
     restante = config.LIMITE_POR_DIA - enviados_hoje
     print(f"🏪 {len(fila)} lojas ainda não contatadas | hoje já foram {enviados_hoje}, faltam {max(restante, 0)}")
     if not fila or restante <= 0:
@@ -137,7 +141,7 @@ def main():
         pagina = garantir_login(contexto)
 
         for i, loja in enumerate(fila, 1):
-            print(f"\n[{i}/{len(fila)}] {loja['nome']} - {loja['url']}")
+            print(f"\n[{i}/{len(fila)}] {loja['nome']} ({loja.get('certeza') or 'confirmada'}) - {loja['url']}")
             if config.CONFIRMAR_CADA_ENVIO:
                 r = input("   Enviar? (s = sim / n = pular / x = nunca contatar / q = sair): ").strip().lower()
                 if r == "q":

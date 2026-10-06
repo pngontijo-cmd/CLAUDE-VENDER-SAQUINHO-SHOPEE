@@ -2,7 +2,9 @@
 
 O robô faz duas coisas:
 
-1. **`buscar_lojas.py`**: pesquisa produtos na Shopee, encontra as lojas de **Nova Serrana** e salva a lista em `lojas_encontradas.csv`.
+1. **`buscar_lojas.py`**: pesquisa produtos na Shopee (filtrando Minas Gerais) e salva as lojas em `lojas_encontradas.csv`. A Shopee só mostra o **estado** da loja, então cada loja recebe uma classificação:
+   - **confirmada**: o nome, a descrição ou algum produto da loja menciona "Nova Serrana";
+   - **provável**: loja de calçados de MG que não menciona a cidade. Recebe a `MENSAGEM_PROVAVEL`, que não afirma que a loja é de Nova Serrana. Para mandar só para as confirmadas, use `SOMENTE_CONFIRMADAS = True` no `config.py`.
 2. **`enviar_mensagens.py`**: abre o chat de cada loja, envia a mensagem oferecendo o saquinho preto e anexa a **tabela de preços** (o arquivo mais recente da pasta configurada).
 
 Ele usa o seu próprio Chrome, logado na **sua** conta da Shopee.

@@ -1,9 +1,12 @@
 """
 Passo 1: procura lojas de Nova Serrana na Shopee e salva em lojas_encontradas.csv.
 
-Como funciona: pesquisa cada palavra de config.PALAVRAS_BUSCA, lê os dados que
-a própria página da Shopee carrega (localização da loja de cada produto) e,
-quando a localização não é clara, abre a página da loja para confirmar.
+Como funciona: a Shopee só mostra o ESTADO da loja, não a cidade. Então o robô
+pesquisa cada palavra de config.PALAVRAS_BUSCA (já filtrando Minas Gerais) e
+classifica cada loja:
+  - "confirmada": o nome da loja, a descrição ou o título de algum produto
+    menciona Nova Serrana;
+  - "provavel":   loja de Minas Gerais vendendo calçado, sem mencionar a cidade.
 
 Uso:  python buscar_lojas.py [--perfil NOME]
 """
@@ -18,13 +21,6 @@ from comum import (CAMPOS_LOJA, SHOPEE, abrir_navegador, agora, anexar_csv,
 from playwright.sync_api import sync_playwright
 
 CHAVES_LOCAL = ("shop_location", "location", "place", "city", "cidade", "address", "state")
-ESTADOS = {normalizar(e) for e in [
-    "Acre", "Alagoas", "Amapa", "Amazonas", "Bahia", "Ceara", "Distrito Federal",
-    "Espirito Santo", "Goias", "Maranhao", "Mato Grosso", "Mato Grosso do Sul",
-    "Minas Gerais", "Para", "Paraiba", "Parana", "Pernambuco", "Piaui",
-    "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul", "Rondonia",
-    "Roraima", "Santa Catarina", "Sao Paulo", "Sergipe", "Tocantins", "",
-]}
 
 
 def pausa(a=2.0, b=5.0):
@@ -69,7 +65,10 @@ def coletar_json(pagina, filtro_url: str, acao) -> list:
 
 
 def produtos_da_busca(pagina, palavra: str, num_pagina: int) -> dict:
-    """Devolve {shopid: {"local": ..., "nome": ...}} de uma página de resultados."""
+    """Devolve {shopid: {"local", "nome", "menciona"}} de uma página de resultados.
+
+    "menciona" é True quando algum produto da loja cita a cidade no título.
+    """
     url = f"{SHOPEE}/search?keyword={quote(palavra)}&page={num_pagina}"
     if config.FILTRO_ESTADO:
         url += f"&locations={quote(config.FILTRO_ESTADO)}"
@@ -87,22 +86,22 @@ def produtos_da_busca(pagina, palavra: str, num_pagina: int) -> dict:
             shopid = d.get("shopid") or d.get("shop_id")
             if not shopid:
                 continue
-            info = lojas.setdefault(str(shopid), {"local": "", "nome": ""})
+            info = lojas.setdefault(str(shopid), {"local": "", "nome": "", "menciona": False})
             info["local"] = info["local"] or local_de(d)
             info["nome"] = info["nome"] or d.get("shop_name") or ""
+            if eh_cidade_alvo(d.get("name")) or eh_cidade_alvo(d.get("shop_name")):
+                info["menciona"] = True
     return lojas
 
 
-def detalhes_da_loja(pagina, shopid: str, local_busca: str = "") -> tuple[dict | None, str]:
-    """Abre a página da loja e confirma se ela é da cidade alvo.
-
-    Devolve (dados da loja ou None, localização lida).
-    """
+def detalhes_da_loja(pagina, shopid: str, info: dict) -> dict:
+    """Abre a página da loja, pega nome/usuário e classifica a certeza."""
     jsons = coletar_json(
         pagina, "/api/v4/shop/",
         lambda: pagina.goto(f"{SHOPEE}/shop/{shopid}", wait_until="domcontentloaded"),
     )
     usuario = nome = local = ""
+    menciona = info["menciona"]
     for j in jsons:
         for d in percorrer(j):
             local = local or local_de(d)
@@ -110,6 +109,9 @@ def detalhes_da_loja(pagina, shopid: str, local_busca: str = "") -> tuple[dict |
                 nome = nome or d.get("name") or ""
                 conta = d.get("account") or {}
                 usuario = usuario or conta.get("username") or ""
+            # descrição da loja, títulos de produtos etc.
+            if any(isinstance(v, str) and eh_cidade_alvo(v) for v in d.values()):
+                menciona = True
 
     if not usuario:  # a URL da loja costuma virar shopee.com.br/<usuario>
         caminho = pagina.url.replace(SHOPEE, "").strip("/").split("?")[0]
@@ -122,15 +124,16 @@ def detalhes_da_loja(pagina, shopid: str, local_busca: str = "") -> tuple[dict |
     except Exception:
         pass
 
-    local = local or local_busca
-    if any(eh_cidade_alvo(t) for t in (local_busca, local, nome, texto)):
-        return {
-            "usuario": usuario,
-            "nome": nome or usuario,
-            "localizacao": local or config.CIDADE_ALVO,
-            "url": f"{SHOPEE}/{usuario}" if usuario else f"{SHOPEE}/shop/{shopid}",
-        }, local
-    return None, local
+    local = local or info["local"]
+    if any(eh_cidade_alvo(t) for t in (local, nome, texto)):
+        menciona = True
+    return {
+        "usuario": usuario,
+        "nome": nome or info["nome"] or usuario,
+        "localizacao": local,
+        "certeza": "confirmada" if menciona else "provavel",
+        "url": f"{SHOPEE}/{usuario}" if usuario else f"{SHOPEE}/shop/{shopid}",
+    }
 
 
 def main():
@@ -162,20 +165,19 @@ def main():
                     with config.ARQUIVO_VERIFICADAS.open("a", encoding="utf-8") as f:
                         f.write(shopid + "\n")
                     local = normalizar(info["local"])
-                    # Localização é de outra cidade (não é só o estado) -> pula.
-                    if local and local not in ESTADOS and not eh_cidade_alvo(local):
+                    # Fora de Minas Gerais e sem citar a cidade -> pula.
+                    if local and "minas gerais" not in local and not eh_cidade_alvo(local) \
+                            and not info["menciona"]:
                         print(f"   · {info['nome'] or shopid}: {info['local']}")
                         continue
 
                     pausa()
-                    loja, local_lido = detalhes_da_loja(pagina, shopid, info["local"])
-                    if not loja:
-                        print(f"   · {info['nome'] or shopid}: {local_lido or 'cidade não encontrada'}")
-                        continue
+                    loja = detalhes_da_loja(pagina, shopid, info)
                     loja.update(shopid=shopid, palavra_busca=palavra, encontrada_em=agora())
                     anexar_csv(config.ARQUIVO_LOJAS, CAMPOS_LOJA, loja)
                     novas += 1
-                    print(f"   ✅ {loja['nome']} ({loja['url']})")
+                    marca = "✅ confirmada" if loja["certeza"] == "confirmada" else "❔ provável "
+                    print(f"   {marca} {loja['nome']} ({loja['url']})")
                 pausa(3, 7)
 
         contexto.close()

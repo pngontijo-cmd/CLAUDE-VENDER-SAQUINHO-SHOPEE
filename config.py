@@ -56,6 +56,21 @@ MENSAGEM = (
     "Qualquer dúvida é só chamar aqui! 🙌"
 )
 
+# Mensagem para lojas "prováveis" (de MG, mas sem mencionar Nova Serrana).
+MENSAGEM_PROVAVEL = (
+    "Olá, {loja}! Tudo bem? 😊\n"
+    "Somos fabricantes de saquinho preto para embalagem de e-commerce "
+    "(envelope de segurança com lacre), ideal para envios da Shopee.\n"
+    "Ficamos em Nova Serrana-MG e entregamos rápido em toda a região, "
+    "com preço de fábrica.\n"
+    "Segue a nossa tabela de valores para vocês analisarem. "
+    "Qualquer dúvida é só chamar aqui! 🙌"
+)
+
+# True  = envia só para lojas que mencionam Nova Serrana (confirmadas).
+# False = envia também para as prováveis (lojas de calçado de MG).
+SOMENTE_CONFIRMADAS = False
+
 # Limite de mensagens por dia (mantenha baixo para não ser bloqueado).
 LIMITE_POR_DIA = 15
 
@@ -80,5 +95,5 @@ BASE = Path(__file__).resolve().parent
 PERFIL_NAVEGADOR = BASE / "perfil_navegador"  # guarda o login da Shopee
 ARQUIVO_LOJAS = BASE / "lojas_encontradas.csv"
 ARQUIVO_ENVIADOS = BASE / "mensagens_enviadas.csv"
-ARQUIVO_VERIFICADAS = BASE / "lojas_verificadas.txt"  # lojas já conferidas
+ARQUIVO_VERIFICADAS = BASE / "lojas_conferidas.txt"  # lojas já conferidas
 ARQUIVO_BLOQUEADOS = BASE / "nao_contatar.txt"  # 1 shopid ou usuário por linha
